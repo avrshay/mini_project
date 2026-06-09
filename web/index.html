@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>PhishGuard - הגנה מהודעות זדוניות</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "status-safe": "#16A34A",
+            "status-danger": "#DC2626",
+            "status-warning": "#EA580C",
+            "primary": "#091426",
+            "surface": "#fbf8fa",
+            "on-surface": "#1b1b1d",
+            "on-surface-variant": "#45474c",
+            "outline-variant": "#c5c6cd",
+            "outline": "#75777d",
+            "surface-container": "#f0edef",
+            "surface-container-lowest": "#ffffff",
+            "surface-tint": "#545f73",
+            "on-primary": "#ffffff",
+            "primary-container": "#1e293b",
+            "on-primary-container": "#8590a6",
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px",
+          },
+          spacing: {
+            "stack-md": "32px",
+            "container-margin": "24px",
+            "touch-target-min": "64px",
+            "stack-sm": "16px",
+            "unit": "8px",
+            "stack-lg": "48px",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: "Heebo", sans-serif; background-color: #fbf8fa; }
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      display: inline-block; vertical-align: middle;
+    }
+    .result-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hidden-result { display: none; opacity: 0; transform: translateY(20px); }
+    .visible-result { display: flex; opacity: 1; transform: translateY(0); }
+    body { min-height: max(884px, 100dvh); }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+  <header class="w-full top-0 sticky bg-surface border-b-2 border-outline-variant z-50">
+    <div class="flex items-center justify-between px-container-margin h-touch-target-min w-full max-w-7xl mx-auto">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary" style="font-size: 32px;">security</span>
+        <h1 class="text-3xl font-extrabold text-primary">PhishGuard</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow w-full max-w-4xl mx-auto px-container-margin py-stack-lg flex flex-col items-center">
+    <div class="w-full text-center mb-stack-lg">
+      <h2 class="text-4xl font-extrabold text-primary mb-stack-sm">בדיקת הודעות חשודות</h2>
+      <p class="text-2xl text-on-surface-variant">השומר הדיגיטלי האישי שלכם נגד הודעות הונאה</p>
+    </div>
+
+    <div class="w-full bg-surface-container-lowest p-8 rounded-xl border-2 border-outline-variant mb-stack-lg">
+      <label class="block text-2xl text-primary mb-4 font-bold" for="message-input">
+        העתיקו והדביקו כאן את ההודעה שקיבלתם בטלפון:
+      </label>
+      <textarea class="w-full h-48 p-6 text-xl border-2 border-outline rounded-lg focus:border-primary focus:ring-0 placeholder:text-outline-variant resize-none bg-white"
+        id="message-input" placeholder="הדביקו את תוכן ה-SMS או הודעת ה-WhatsApp כאן..."></textarea>
+      <button class="w-full mt-6 h-touch-target-min bg-primary text-on-primary text-3xl font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-4 hover:bg-primary-container hover:text-on-primary-container"
+        id="check-button">
+        <span class="material-symbols-outlined" style="font-size: 36px;">search</span>
+        בדוק הודעה
+      </button>
+    </div>
+
+    <div class="w-full hidden-result flex-col gap-6" id="results-container">
+      <div class="result-card hidden bg-white border-4 border-status-safe p-8 rounded-xl flex items-start gap-6" id="result-safe">
+        <div class="flex-grow">
+          <h3 class="text-3xl font-bold text-status-safe mb-2">הודעה בטוחה</h3>
+          <p class="text-xl text-on-surface-variant" id="safe-text"></p>
+        </div>
+        <span class="material-symbols-outlined text-status-safe" style="font-size: 80px; font-variation-settings: 'FILL' 1;">check_circle</span>
+      </div>
+
+      <div class="result-card hidden bg-white border-4 border-status-warning p-8 rounded-xl flex items-start gap-6" id="result-warning">
+        <div class="flex-grow">
+          <h3 class="text-3xl font-bold text-status-warning mb-2">הודעה חשודה</h3>
+          <p class="text-xl text-on-surface-variant" id="warning-text"></p>
+        </div>
+        <span class="material-symbols-outlined text-status-warning" style="font-size: 80px; font-variation-settings: 'FILL' 1;">warning</span>
+      </div>
+
+      <div class="result-card hidden bg-white border-4 border-status-danger p-8 rounded-xl flex items-start gap-6" id="result-danger">
+        <div class="flex-grow">
+          <h3 class="text-3xl font-bold text-status-danger mb-2">הודעה מסוכנת - זהירות!</h3>
+          <p class="text-xl text-on-surface-variant" id="danger-text"></p>
+        </div>
+        <span class="material-symbols-outlined text-status-danger" style="font-size: 80px; font-variation-settings: 'FILL' 1;">report</span>
+      </div>
+
+      <div class="bg-surface-container p-8 rounded-xl border-2 border-outline-variant mt-stack-sm">
+        <h4 class="text-2xl text-primary font-bold mb-4">למה ההודעה סווגה כך?</h4>
+        <ul class="space-y-4" id="reasons-list"></ul>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const checkBtn = document.getElementById("check-button");
+    const resultsContainer = document.getElementById("results-container");
+    const safeResult = document.getElementById("result-safe");
+    const warningResult = document.getElementById("result-warning");
+    const dangerResult = document.getElementById("result-danger");
+    const textArea = document.getElementById("message-input");
+    const safeText = document.getElementById("safe-text");
+    const warningText = document.getElementById("warning-text");
+    const dangerText = document.getElementById("danger-text");
+    const reasonsList = document.getElementById("reasons-list");
+
+    function resetCards() {
+      safeResult.classList.add("hidden");
+      warningResult.classList.add("hidden");
+      dangerResult.classList.add("hidden");
+    }
+
+    function renderReasons(reasons) {
+      reasonsList.innerHTML = "";
+      reasons.forEach((reason) => {
+        const li = document.createElement("li");
+        li.className = "flex items-center gap-3 text-xl";
+        li.innerHTML = `<span class="material-symbols-outlined text-primary">check_small</span>${reason}`;
+        reasonsList.appendChild(li);
+      });
+    }
+
+    checkBtn.addEventListener("click", async () => {
+      const text = textArea.value.trim();
+      if (!text) {
+        textArea.classList.add("border-status-danger");
+        setTimeout(() => textArea.classList.remove("border-status-danger"), 1000);
+        return;
+      }
+
+      checkBtn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size: 36px;">refresh</span> בודק...';
+      checkBtn.disabled = true;
+
+      try {
+        const resp = await fetch("/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!resp.ok) {
+          throw new Error("Analysis request failed");
+        }
+        const data = await resp.json();
+
+        resetCards();
+        resultsContainer.classList.remove("hidden-result");
+        resultsContainer.classList.add("visible-result");
+        renderReasons(data.reasons || []);
+
+        const score = Number.isInteger(data.final_score)
+          ? data.final_score
+          : Math.round((data.confidence || 0) * 100);
+        const summary = `${data.explanation} (רמת ביטחון: ${score}%)`;
+
+        if (data.tier === "בטוח") {
+          safeText.textContent = summary;
+          safeResult.classList.remove("hidden");
+        } else if (data.tier === "חשוד") {
+          warningText.textContent = summary;
+          warningResult.classList.remove("hidden");
+        } else {
+          dangerText.textContent = summary;
+          dangerResult.classList.remove("hidden");
+        }
+
+        resultsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (e) {
+        resetCards();
+        resultsContainer.classList.remove("hidden-result");
+        resultsContainer.classList.add("visible-result");
+        warningText.textContent = "אירעה תקלה בבדיקה. נסו שוב בעוד רגע.";
+        renderReasons(["המערכת לא הצליחה לקבל תשובה מהשרת"]);
+        warningResult.classList.remove("hidden");
+      } finally {
+        checkBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px;">search</span> בדוק הודעה';
+        checkBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+
