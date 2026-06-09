@@ -81,6 +81,33 @@
       </label>
       <textarea class="w-full h-48 p-6 text-xl border-2 border-outline rounded-lg focus:border-primary focus:ring-0 placeholder:text-outline-variant resize-none bg-white"
         id="message-input" placeholder="הדביקו את תוכן ה-SMS או הודעת ה-WhatsApp כאן..."></textarea>
+      <div class="mt-6">
+        <label class="block text-xl text-primary font-bold mb-3">רמת הגנה:</label>
+        <div class="grid grid-cols-3 gap-3" id="profile-selector">
+          <button data-profile="max_protection"
+            class="profile-btn border-2 border-outline-variant rounded-xl p-4 text-center transition-all hover:border-primary"
+            title="מתאים במיוחד לגיל השלישי — מזהה כמה שיותר איומים">
+            <span class="material-symbols-outlined text-status-danger block mb-1" style="font-size:32px;">shield</span>
+            <span class="block text-lg font-bold text-primary">הגנה מרבית</span>
+            <span class="block text-base text-on-surface-variant">מתאים לגיל השלישי</span>
+          </button>
+          <button data-profile="balanced"
+            class="profile-btn border-2 border-primary bg-primary/5 rounded-xl p-4 text-center transition-all"
+            title="איזון בין זיהוי איומים ומניעת התראות שווא">
+            <span class="material-symbols-outlined text-primary block mb-1" style="font-size:32px;">balance</span>
+            <span class="block text-lg font-bold text-primary">מאוזן</span>
+            <span class="block text-base text-on-surface-variant">ברירת מחדל</span>
+          </button>
+          <button data-profile="min_disturbance"
+            class="profile-btn border-2 border-outline-variant rounded-xl p-4 text-center transition-all hover:border-primary"
+            title="פחות התראות — מתאים למשתמשים מנוסים">
+            <span class="material-symbols-outlined text-status-safe block mb-1" style="font-size:32px;">notifications_off</span>
+            <span class="block text-lg font-bold text-primary">הפרעה מינימלית</span>
+            <span class="block text-base text-on-surface-variant">למשתמשים מנוסים</span>
+          </button>
+        </div>
+      </div>
+
       <button class="w-full mt-6 h-touch-target-min bg-primary text-on-primary text-3xl font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-4 hover:bg-primary-container hover:text-on-primary-container"
         id="check-button">
         <span class="material-symbols-outlined" style="font-size: 36px;">search</span>
@@ -148,6 +175,20 @@
       });
     }
 
+    let selectedProfile = "balanced";
+
+    document.querySelectorAll(".profile-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedProfile = btn.dataset.profile;
+        document.querySelectorAll(".profile-btn").forEach(b => {
+          b.classList.remove("border-primary", "bg-primary/5");
+          b.classList.add("border-outline-variant");
+        });
+        btn.classList.add("border-primary", "bg-primary/5");
+        btn.classList.remove("border-outline-variant");
+      });
+    });
+
     checkBtn.addEventListener("click", async () => {
       const text = textArea.value.trim();
       if (!text) {
@@ -163,7 +204,7 @@
         const resp = await fetch("/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, profile: selectedProfile }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));

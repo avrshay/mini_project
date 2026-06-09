@@ -17,17 +17,10 @@ from phishguard.types import Channel, IncomingMessage
 
 class AnalyzeRequest(BaseModel):
     text: str
+    profile: str = "balanced"
 
 
 app = FastAPI(title="PhishGuard UI Server")
-agent: PhishGuardAgent | None = None
-
-
-@app.on_event("startup")
-def startup_event() -> None:
-    global agent
-    agent = PhishGuardAgent(AppConfig())
-    agent.boot()
 
 
 @app.get("/")
@@ -37,12 +30,12 @@ def root() -> FileResponse:
 
 @app.post("/analyze")
 async def analyze(payload: AnalyzeRequest) -> dict:
-    if agent is None:
-        raise HTTPException(status_code=500, detail="Agent not initialized")
-
     text = payload.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Message text is required")
+
+    config = AppConfig.with_profile(payload.profile)
+    agent = PhishGuardAgent(config)
 
     try:
         assessment = await agent.on_message(
