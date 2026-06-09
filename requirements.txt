@@ -3,3 +3,6 @@ uvicorn
 httpx
 pydantic
 python-dotenv
+pytest
+pytest-asyncio
+respx
