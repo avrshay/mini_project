@@ -166,7 +166,8 @@
           body: JSON.stringify({ text }),
         });
         if (!resp.ok) {
-          throw new Error("Analysis request failed");
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || "שגיאה לא ידועה מהשרת");
         }
         const data = await resp.json();
 
@@ -196,8 +197,8 @@
         resetCards();
         resultsContainer.classList.remove("hidden-result");
         resultsContainer.classList.add("visible-result");
-        warningText.textContent = "אירעה תקלה בבדיקה. נסו שוב בעוד רגע.";
-        renderReasons(["המערכת לא הצליחה לקבל תשובה מהשרת"]);
+        warningText.textContent = "אירעה תקלה בבדיקה: " + e.message;
+        renderReasons(["פרטי השגיאה: " + e.message]);
         warningResult.classList.remove("hidden");
       } finally {
         checkBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px;">search</span> בדוק הודעה';

@@ -23,12 +23,6 @@ class IncomingMessage:
 
 
 @dataclass
-class MLResult:
-    phishing_probability: float
-    predicted_label: int
-
-
-@dataclass
 class RiskAssessment:
     tier: RiskTier
     confidence: float

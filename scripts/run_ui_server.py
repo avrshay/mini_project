@@ -44,9 +44,12 @@ async def analyze(payload: AnalyzeRequest) -> dict:
     if not text:
         raise HTTPException(status_code=400, detail="Message text is required")
 
-    assessment = await agent.on_message(
-        IncomingMessage(sender="משתמש", channel=Channel.WHATSAPP, text=text)
-    )
+    try:
+        assessment = await agent.on_message(
+            IncomingMessage(sender="משתמש", channel=Channel.WHATSAPP, text=text)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return {
         "tier": assessment.tier.value,
         "confidence": round(assessment.confidence, 4),
