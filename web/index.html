@@ -220,7 +220,7 @@
         const score = Number.isInteger(data.final_score)
           ? data.final_score
           : Math.round((data.confidence || 0) * 100);
-        const summary = `${data.explanation} (רמת ביטחון: ${score}%)`;
+        const summary = `${data.explanation} (רמת סיכון: ${score}%)`;
 
         if (data.tier === "בטוח") {
           safeText.textContent = summary;
